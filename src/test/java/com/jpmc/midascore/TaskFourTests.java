@@ -6,6 +6,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.kafka.test.context.EmbeddedKafka;
+import com.jpmc.midascore.component.DatabaseConduit;
+import com.jpmc.midascore.entity.UserRecord;
 import org.springframework.test.annotation.DirtiesContext;
 
 @SpringBootTest
@@ -23,6 +25,9 @@ public class TaskFourTests {
     @Autowired
     private FileLoader fileLoader;
 
+    @Autowired
+    private DatabaseConduit databaseConduit;
+
     @Test
     void task_four_verifier() throws InterruptedException {
         userPopulator.populate();
@@ -37,10 +42,16 @@ public class TaskFourTests {
         logger.info("----------------------------------------------------------");
         logger.info("----------------------------------------------------------");
         logger.info("use your debugger to find out what wilbur's balance is after all transactions are processed");
-        logger.info("kill this test once you find the answer");
-        while (true) {
-            Thread.sleep(20000);
-            logger.info("...");
+        for (int i = 0; i < 5; i++) {
+            Thread.sleep(2000);
+            UserRecord wilbur = databaseConduit.getUserByName("wilbur");
+            if (wilbur != null) {
+                logger.info("Wilbur's balance at {}: {}", i, wilbur.getBalance());
+                try {
+                    java.nio.file.Files.writeString(java.nio.file.Path.of("wilbur_balance.txt"), "Wilbur's balance: " + wilbur.getBalance() + "\n", java.nio.file.StandardOpenOption.CREATE, java.nio.file.StandardOpenOption.APPEND);
+                } catch (Exception e) {}
+            }
         }
+        logger.info("kill this test once you find the answer");
     }
 }
